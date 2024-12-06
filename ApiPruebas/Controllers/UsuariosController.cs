@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using ApiPruebas.Data;
+using ApiPruebas.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ApiPruebas.Data;
-using ApiPruebas.Models;
 
 namespace ApiPruebas.Controllers
 {

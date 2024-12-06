@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using ApiPruebas.Models;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace ApiPruebas.Data
 {
     public class ApiPruebasContext : DbContext
     {
-        public ApiPruebasContext (DbContextOptions<ApiPruebasContext> options)
+        public ApiPruebasContext(DbContextOptions<ApiPruebasContext> options)
             : base(options)
         {
         }
