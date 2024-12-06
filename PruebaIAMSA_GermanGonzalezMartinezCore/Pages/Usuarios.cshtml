@@ -44,7 +44,7 @@
                 <input type="hidden" id="idUsuario" value="" />
                 <div class="mb-3">
                     <label for="nombreUsuario" class="form-label">Nombre completo</label>
-                    <input type="text" class="form-control" id="nombreUsuario" placeholder="Jhon Doe">
+                    <input type="text" class="form-control" id="nombreUsuario" placeholder="Jhon Doe" maxlength="50">
                 </div>
                 <div class="mb-3">
                     <label for="edadUsuario" class="form-label">Edad</label>
@@ -304,7 +304,7 @@
         let usuarioValido = function (usuario) {
             let pattern = /^[a-zA-Z0-9._%+-]+@@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
             return (pattern.test(usuario.email) &&
-                (usuario.nombre.length > 0
+                ((usuario.nombre.length > 0 && usaurio.nombre.length < 50)
                     || usuario.edad.length > 0
                     || usuario.email.length > 0)
             )
