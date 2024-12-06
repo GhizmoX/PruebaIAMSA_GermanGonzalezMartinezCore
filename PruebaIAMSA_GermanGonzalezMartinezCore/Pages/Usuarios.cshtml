@@ -1,0 +1,362 @@
+﻿@page
+@{
+    ViewData["Title"] = "Usuarios";
+}
+<h2>@ViewData["Title"]</h2>
+<div id="liveAlertPlaceholder"></div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-11"></div>
+        <div class="col-1 align-self-end">
+            <button id="btnOpenModal" class="btn btn-primary">[+]</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <table id="usuarios" class="table">
+                <thead>
+                    <tr>
+                        <th scope="col" style="display:none;"></th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Edad</th>
+                        <th scope="col">Email</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align: center;" colspan="5">Cargando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="usuarioModal" tabindex="-1" aria-labelledby="usuarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="usuarioModalLabel">Datos usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="idUsuario" value="" />
+                <div class="mb-3">
+                    <label for="nombreUsuario" class="form-label">Nombre completo</label>
+                    <input type="text" class="form-control" id="nombreUsuario" placeholder="Jhon Doe">
+                </div>
+                <div class="mb-3">
+                    <label for="edadUsuario" class="form-label">Edad</label>
+                    <input type="number" class="form-control" id="edadUsuario" placeholder="30">
+                </div>
+                <div class="mb-3">
+                    <label for="emailUsuario" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="emailUsuario" placeholder="name@example.com">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                <button id="btnGuardarUsuario" type="button" class="btn btn-success">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="borrarUsuarioModal" tabindex="-1" aria-labelledby="borrarUsuarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="borrarUsuarioModalLabel">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+                        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2" />
+                    </svg>
+                    Alerta
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="idUsuarioBorrar" value="" />
+                <p>Está a punto de eliminar un registro, éste proceso es irreversible.</p>
+                <h3>¿Desea continuar?</h3>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="limpiarIdUsuario()">Cancelar</button>
+                <button id="btnBorrarUsuario" type="button" class="btn btn-success">Borrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        // Ejecutamos DOM
+        $(document).ready(async function () {
+            await initTable();
+            initButtonEvents();
+        });
+        /**
+         * Inicializa la tabla de usuarios.
+         * @@type {async}
+         */
+        let initTable = async function () {
+            await $.ajax({
+                url: 'https://localhost:7191/api/Usuarios',
+                type: 'GET',
+                contentType: 'application/json; charset=utf-8'
+            })
+                .done(function (data, textStatus, jqXHR) {
+                    $('#usuarios tbody').children().remove()
+                    if (data.length == 0){
+                        let tableRow = `
+                            <tr>
+                                <td colspan="5">Sin datos para mostrar</td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    $.each(data, function (index, dataRow) {
+                        let tableRow = '';
+                        tableRow += `
+                            <tr>
+                                <td class="idUsuario" style="display: none;">${dataRow.idUsuario}</td>
+                                <td class="nombreUsuario">${dataRow.nombre}</td>
+                                <td class="edadUsuario">${dataRow.edad}</td>
+                                <td class="emailUsuario">${dataRow.email}</td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <button class="btn btn-outline-primary btnActualizar">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="col-6">
+                                            <button class="btn btn-outline-danger btnBorrar">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                        $(tableRow).appendTo('#usuarios tbody');
+                    });
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    let tableRow = `
+                        <tr>
+                            <td colspan="5">Error al cargar: ${textStatus}</td>
+                        </tr>
+                    `;
+                })
+                .always(function (data, textStatus, errorThrown) {
+
+                });
+        };
+        /**
+         * Inicializa los eventos de los botones en el documento.
+         * @@type {lambda}
+         */
+        let initButtonEvents = () => {
+            $('#btnOpenModal').on('click', function () {
+                limpiarFormulario();
+                modalToggler();
+            });
+            $('#btnGuardarUsuario').on('click', function () {
+                let idUsuario = $('#idUsuario').val();
+                if (idUsuario == '' || idUsuario == 0) nuevoUsuario();
+                else actualizaUsuario();
+            });
+            $('#usuarios').on('click', '.btnActualizar', function () {
+                let row = $(this).closest('tr');
+                let informacionUsuario = {
+                    "idUsuario": row.find('.idUsuario').text(),
+                    "nombre": row.find('.nombreUsuario').text(),
+                    "edad": row.find('.edadUsuario').text(),
+                    "email": row.find('.emailUsuario').text()
+                };
+                modalToggler(informacionUsuario);
+            });
+            $('#usuarios').on('click', '.btnBorrar', function () {
+                let row = $(this).closest('tr');
+                let idUsuario = row.find('.idUsuario').text();
+                $('#borrarUsuarioModal').modal('show');
+                $('#idUsuarioBorrar').val(idUsuario);
+            });
+            $('#btnBorrarUsuario').on('click', function () {
+                borraUsuario($('#idUsuarioBorrar').val());
+                $('#borrarUsuarioModal').modal('hide');
+            });
+        };
+        //=== Helpers ===================================================================================================
+        /**
+         * Elimina registros en el formulario del modal para un nuevo proceso.
+         * @@type {function}
+         */
+        let limpiarFormulario = function () {
+            let inputsFormulario = $('#usuarioModal').find('input');
+            $.each(inputsFormulario, function (index, value) {
+                $(value).val('');
+            });
+        };
+        /**
+         * Envía solicitud ajax a la web api para registrar usuario desde formulario.
+         * @@type {async}
+         */
+        let nuevoUsuario = async function () {
+            let informacionUsuario = {
+                "nombre": $('#nombreUsuario').val(),
+                "edad": $('#edadUsuario').val(),
+                "email": $('#emailUsuario').val()
+            };
+            if (!usuarioValido(informacionUsuario)) {
+                modalToggler();
+                showAlert('uno o más errores, valide su información', 'danger');
+                return;
+            }
+            await $.ajax({
+                url: 'https://localhost:7191/api/Usuarios',
+                type: 'POST',
+                data: JSON.stringify(informacionUsuario),
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8'
+            })
+                .done(function (data, textStatus, jqXHR) {
+                    showAlert('Usuario guardado', 'success');
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    showAlert(`Error al guardar: ${textStatus} | ${errorThrown}`, 'danger');
+                })
+                .always(function (data, textStatus, errorThrown) {
+                    modalToggler();
+                    initTable();
+                });
+        };
+        /**
+         * Envía solicitud ajax a la web api para actualizar usuario desde formulario.
+         * @@type {async}
+         */
+        let actualizaUsuario = async function () {
+            let informacionUsuario = {
+                "idUsuario": $('#idUsuario').val(),
+                "nombre": $('#nombreUsuario').val(),
+                "edad": $('#edadUsuario').val(),
+                "email": $('#emailUsuario').val()
+            };
+            if (!usuarioValido(informacionUsuario)) {
+                modalToggler();
+                showAlert('uno o más errores, valide su información', 'danger');
+                return;
+            }
+            await $.ajax({
+                url: 'https://localhost:7191/api/Usuarios/' + informacionUsuario.idUsuario,
+                type: 'PUT',
+                data: JSON.stringify(informacionUsuario),
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8'
+            })
+                .done(function (data, textStatus, jqXHR) {
+                    showAlert('Usuario guardado', 'success');
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    showAlert(`Error al guardar: ${textStatus} | ${errorThrown}`, 'danger');
+                })
+                .always(function (data, textStatus, errorThrown) {
+                    modalToggler();
+                    initTable();
+                });
+        };
+        /**
+         * Envía solicitud ajax a la web api para borrar usuario.
+         * @@type {async}
+         * @@param {number} idUsuarioValue - Identificador de usuario en base de datos.
+         */
+        let borraUsuario = async function (idUsuarioValue) {
+            await $.ajax({
+                url: 'https://localhost:7191/api/Usuarios/' + idUsuarioValue,
+                type: 'DELETE',
+                contentType: 'application/json; charset=utf-8'
+            })
+                .done(function (data, textStatus, jqXHR) {
+                    showAlert('Usuario borrado', 'success');
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    showAlert(`Error al borrar: ${textStatus} | ${errorThrown}`, 'danger');
+                })
+                .always(function (data, textStatus, errorThrown) {
+                    initTable();
+                });
+        };
+        /**
+         * Valida que la información del usuario sea correcta.
+         * @@type {function}
+         * @@param {Object} usuario - Objeto json con la información del usuario.
+         * @@param {number} usuario.idUsuario - Identificador.
+         * @@param {string} usuario.nombre - Nombre completo del usuario.
+         * @@param {number} usuario.edad - Edad actual del usuario.
+         * @@param {string} usuario.email - Correo activo del usuario.
+         * @@returns {boolean} Verdadero si es válido.
+         */
+        let usuarioValido = function (usuario) {
+            let pattern = /^[a-zA-Z0-9._%+-]+@@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return (pattern.test(usuario.email) &&
+                (usuario.nombre.length > 0
+                    || usuario.edad.length > 0
+                    || usuario.email.length > 0)
+            )
+        };
+        /**
+         * Muestra un mensaje personalizado al tope de la página.
+         * @@type {function}
+         * @@param {string} mensaje - Contiene el mensaje que se va a mostrar.
+         * @@param {string} tipo - Contiene el tipo de alerta a desplegar.
+         */
+        let showAlert = function (mensaje, tipo) {
+            let wrapper = $('<div class="alert alert-' + tipo + ' alert-dismissible" role="alert">' +
+                mensaje +
+                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                '</div>');
+            $('#liveAlertPlaceholder').append(wrapper);
+        };
+        /**
+         * Abre o cierra la modal del formulario de usuario.
+         * @@type {function}
+         * @@param {Object} data - Objeto json con la información del usuario.
+         * @@param {number} data.idUsuario - Identificador.
+         * @@param {string} data.nombre - Nombre completo del usuario.
+         * @@param {number} data.edad - Edad actual del usuario.
+         * @@param {string} data.email - Correo activo del usuario.
+         */
+        let modalToggler = function (data) {
+            $('#usuarioModal').modal('toggle');
+            limpiarFormulario();
+            if (data) poblarModal(data);
+        };
+        /**
+         * Agrega valores a los campos para editar usuario.
+         * @@type {function}
+         * @@param {Object} data - Objeto json con la información del usuario.
+         * @@param {number} data.idUsuario - Identificador.
+         * @@param {string} data.nombre - Nombre completo del usuario.
+         * @@param {number} data.edad - Edad actual del usuario.
+         * @@param {string} data.email - Correo activo del usuario.
+         */
+        let poblarModal = function (data) {
+            $('#idUsuario').val(data.idUsuario);
+            $('#nombreUsuario').val(data.nombre);
+            $('#edadUsuario').val(data.edad);
+            $('#emailUsuario').val(data.email);
+        };
+        /**
+         * Limpia el campo secreto en la modal para borrar usuario.
+         * @@type {function}
+         */
+        let limpiarIdUsuario = function () {
+            $('#idUsuarioBorrar').val('');
+        };
+    </script>
+}
